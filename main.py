@@ -1,8 +1,11 @@
-# Import / İçe Aktarma
-from flask import Flask, render_template
+# İçe Aktarma
+from flask import Flask, render_template, request
 
 
 app = Flask(__name__)
+
+with open("database_counter_container.txt", "r", encoding='utf-8') as filee:
+    database_counter = int(filee.read())
 
 def result_calculate(size, lights, device):
     # Elektrikli cihazların enerji tüketimini hesaplamaya olanak tanıyan değişkenler
@@ -15,7 +18,6 @@ def result_calculate(size, lights, device):
 @app.route('/')
 def index():
     return render_template('index.html')
-
 # İkinci sayfa
 @app.route('/<size>')
 def lights(size):
@@ -28,7 +30,7 @@ def lights(size):
 @app.route('/<size>/<lights>')
 def electronics(size, lights):
     return render_template(
-                            'electronics.html',
+                            'electronics.html',                           
                             size = size, 
                             lights = lights                           
                            )
@@ -42,4 +44,37 @@ def end(size, lights, device):
                                                     float(device)
                                                     )
                         )
-app.run(debug=True)
+# Form
+@app.route('/form')
+def form():
+    return render_template('form.html')
+
+#Formun sonuçları
+@app.route('/submit', methods=['POST'])
+def submit_form():
+    # Veri toplama için değişkenleri tanımlayın
+    global database_counter
+    name = request.form['name']
+    email = request.form['email']
+    address = request.form['address']
+    date = request.form['date']
+    with open("form_database.txt", "a", encoding='utf-8') as f:
+        database_counter += 1
+        
+        f.write("Ad "+ str(database_counter) + ": " + name + "\n")
+        f.write("Email "+ str(database_counter) + ": " + email + "\n")
+        f.write("Address "+ str(database_counter) + ": " + address + "\n")
+        f.write("Tarih "+ str(database_counter) + ": " + date + "\n\n")
+    with open("database_counter_container.txt", "w") as filefile:
+        filefile.write(str(database_counter))
+
+    # Verilerinizi kaydedebilir veya e-posta ile gönderebilirsiniz
+    return render_template('form_result.html', 
+                           # Değişkenleri buraya yerleştirin
+                           name=name,
+                           email=email,
+                           address=address,
+                           date=date,
+                           )
+
+app.run(debug=False)
